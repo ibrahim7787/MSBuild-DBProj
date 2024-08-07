@@ -1,31 +1,54 @@
 <Project Sdk="MSBuild.Sdk.SqlProj/2.8.0">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <SqlServerVersion>Sql150</SqlServerVersion>
-    <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
-  </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Use SQL Server Authentication -->
-    <TargetServerName>localhost</TargetServerName>
-    <TargetDatabaseName>MSBuild-DBProj</TargetDatabaseName>
-    <TargetUser>SA</TargetUser>
-    <TargetPassword>Tech@1234$</TargetPassword>
-    <DeployOnBuild>true</DeployOnBuild>
-    <PublishProfile>DefaultPublish</PublishProfile>
-  </PropertyGroup>
-  
- <ItemGroup>
-  <SqlPublishProfile Include="DefaultPublish">
-    <TargetDatabaseName>MSBuild-DBProj</TargetDatabaseName>
-    <TargetServerName>localhost</TargetServerName>
-    <TargetUser>SA</TargetUser>
-    <TargetPassword>Tech@1234$</TargetPassword>
-    <DropObjectsNotInSource>false</DropObjectsNotInSource> <!-- This should be false to avoid dropping existing objects -->
-    <BlockOnPossibleDataLoss>false</BlockOnPossibleDataLoss> <!-- This should be false to avoid blocking deployment due to data loss -->
-    <TrustServerCertificate>true</TrustServerCertificate>
-  </SqlPublishProfile>
-</ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<SqlServerVersion>Sql150</SqlServerVersion>
+		<RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
+		<DeployOnBuild>true</DeployOnBuild>
+		<!-- Ensures deployment occurs on build -->
+		<PublishProfile>DefaultPublish</PublishProfile>
+		<!-- Default publish profile -->
+	</PropertyGroup>
 
-  
+	<PropertyGroup>
+		<!-- SQL Server connection settings -->
+		<TargetServerName>localhost</TargetServerName>
+		<TargetDatabaseName>MSBuild-DBProj</TargetDatabaseName>
+		<TargetUser>SA</TargetUser>
+		<TargetPassword>Tech@1234$</TargetPassword>
+		<TrustServerCertificate>true</TrustServerCertificate>
+		<!-- Trust the server certificate -->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Include all SQL scripts in the build process -->
+		<None Include="Scripts\*.sql">
+			<Pack>false</Pack>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<!-- SQL Publish Profile settings -->
+		<SqlPublishProfile Include="DefaultPublish">
+			<TargetDatabaseName>$(TargetDatabaseName)</TargetDatabaseName>
+			<TargetServerName>$(TargetServerName)</TargetServerName>
+			<TargetUser>$(TargetUser)</TargetUser>
+			<TargetPassword>$(TargetPassword)</TargetPassword>
+			<DropObjectsNotInSource>false</DropObjectsNotInSource>
+			<!-- Avoid dropping existing objects -->
+			<BlockOnPossibleDataLoss>false</BlockOnPossibleDataLoss>
+			<!-- Allow potential data loss -->
+			<TrustServerCertificate>true</TrustServerCertificate>
+		</SqlPublishProfile>
+	</ItemGroup>
+
+	<Target Name="BuildDacpac" AfterTargets="Build">
+		<Message Importance="high" Text="Building DACPAC file..." />
+		<Exec Command="dotnet build -o $(OutputPath)" />
+	</Target>
+
+	<Target Name="PublishDacpac" AfterTargets="BuildDacpac">
+		<Message Importance="high" Text="Publishing DACPAC file to database..." />
+		<Exec Command="SqlPackage /Action:Publish /SourceFile:&quot;$(OutputPath)MSBuild-DBProj.dacpac&quot; /TargetServerName:$(TargetServerName) /TargetDatabaseName:$(TargetDatabaseName) /TargetUser:$(TargetUser) /TargetPassword:$(TargetPassword) /p:TrustServerCertificate=$(TrustServerCertificate)" />
+	</Target>
+
 </Project>
