@@ -6,9 +6,26 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetServer>TR-LTS-16\SQLEXPRESS</TargetServer>
+    <!-- Use SQL Server Authentication -->
+    <TargetServerName>localhost</TargetServerName>
     <TargetDatabaseName>MSBuild-DBProj</TargetDatabaseName>
-    <IntegratedSecurity>true</IntegratedSecurity>
+    <TargetUser>SA</TargetUser>
+    <TargetPassword>Tech@1234$</TargetPassword>
+    <DeployOnBuild>true</DeployOnBuild>
+    <PublishProfile>DefaultPublish</PublishProfile>
   </PropertyGroup>
-</Project>
+  
+ <ItemGroup>
+  <SqlPublishProfile Include="DefaultPublish">
+    <TargetDatabaseName>MSBuild-DBProj</TargetDatabaseName>
+    <TargetServerName>localhost</TargetServerName>
+    <TargetUser>SA</TargetUser>
+    <TargetPassword>Tech@1234$</TargetPassword>
+    <DropObjectsNotInSource>false</DropObjectsNotInSource> <!-- This should be false to avoid dropping existing objects -->
+    <BlockOnPossibleDataLoss>false</BlockOnPossibleDataLoss> <!-- This should be false to avoid blocking deployment due to data loss -->
+    <TrustServerCertificate>true</TrustServerCertificate>
+  </SqlPublishProfile>
+</ItemGroup>
 
+  
+</Project>
